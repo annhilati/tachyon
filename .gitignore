@@ -1,0 +1,16 @@
+.vscode/
+.idea/
+
+*.spv
+*.ll
+*.bc
+
+tachyon/.gradle
+tachyon/build
+tachyon/run
+!tachyon/gradle
+
+test-shader/.pixi
+
+.reference/
+!.reference/@docs/

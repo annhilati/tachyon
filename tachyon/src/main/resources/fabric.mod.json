@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "tachyon",
+  "version": "${version}",
+  "name": "Tachyon (Mojo Shaders)",
+  "description": "Loads SPIR-V binaries into Blaze3D instead of compiling GLSL.",
+  "authors": [
+    "Annhilati & AI"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/tachyon/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.tachyon.TachyonMod"
+    ]
+  },
+  "mixins": [
+    "tachyon.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
