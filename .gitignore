@@ -4,10 +4,14 @@
 *.spv
 *.ll
 *.bc
+*.spvasm
+
+!wrapper_manual.spvasm
 
 tachyon/.gradle
 tachyon/build
 tachyon/run
+tachyon/bin
 !tachyon/gradle
 
 test-shader/.pixi

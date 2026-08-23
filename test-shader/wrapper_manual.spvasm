@@ -1,0 +1,53 @@
+; SPIR-V
+; Version: 1.0
+; Generator: Khronos
+; Bound: 100
+; Schema: 0
+               OpCapability Shader
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint Fragment %main "main" %texCoord %fragColor
+               OpExecutionMode %main OriginUpperLeft
+               OpName %main "main"
+               OpName %mojo_main "mojo_main"
+               OpName %texCoord "texCoord"
+               OpName %fragColor "fragColor"
+               OpName %InSampler "InSampler"
+               OpDecorate %texCoord Location 0
+               OpDecorate %fragColor Location 0
+               OpDecorate %InSampler Binding 0
+               OpDecorate %InSampler DescriptorSet 0
+               OpDecorate %mojo_main LinkageAttributes "mojo_main" Import
+       %void = OpTypeVoid
+          %3 = OpTypeFunction %void
+      %float = OpTypeFloat 32
+    %v4float = OpTypeVector %float 4
+    %v2float = OpTypeVector %float 2
+%_ptr_Input_v2float = OpTypePointer Input %v2float
+   %texCoord = OpVariable %_ptr_Input_v2float Input
+%_ptr_Output_v4float = OpTypePointer Output %v4float
+  %fragColor = OpVariable %_ptr_Output_v4float Output
+      %image = OpTypeImage %float 2D 0 0 0 1 Unknown
+    %sampler = OpTypeSampledImage %image
+%_ptr_UniformConstant_sampler = OpTypePointer UniformConstant %sampler
+  %InSampler = OpVariable %_ptr_UniformConstant_sampler UniformConstant
+         %12 = OpTypeFunction %v4float %v4float %v4float
+ %float_0_299 = OpConstant %float 0.299
+ %float_0_587 = OpConstant %float 0.587
+ %float_0_114 = OpConstant %float 0.114
+   %float_1_0 = OpConstant %float 1.0
+    %weights = OpConstantComposite %v4float %float_0_299 %float_0_587 %float_0_114 %float_1_0
+
+       %main = OpFunction %void None %3
+         %15 = OpLabel
+         %16 = OpLoad %v2float %texCoord
+         %17 = OpLoad %sampler %InSampler
+         %18 = OpImageSampleImplicitLod %v4float %17 %16
+         %19 = OpFunctionCall %v4float %mojo_main %18 %weights
+               OpStore %fragColor %19
+               OpReturn
+               OpFunctionEnd
+
+  %mojo_main = OpFunction %v4float None %12
+     %param1 = OpFunctionParameter %v4float
+     %param2 = OpFunctionParameter %v4float
+               OpFunctionEnd
