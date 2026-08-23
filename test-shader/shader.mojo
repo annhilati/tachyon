@@ -1,4 +1,4 @@
-from tachyonSL import Vec4
+from tachyon import Vec4
 
 @export
 def mojo_main(color: Vec4, weights: Vec4) -> Vec4:

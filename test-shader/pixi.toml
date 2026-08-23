@@ -14,4 +14,4 @@ llvm-tools = ">=22.1.8,<23"
 spirv-tools = ">=2026.3,<2027"
 
 [tasks]
-build = "mojo build main.mojo -o build/shader.spv" # This is a placeholder command for compiling to SPIR-V
+build = "bash ../tachyon-sdk/compiler/build.sh" # This is a placeholder command for compiling to SPIR-V
