@@ -1,1 +1,1 @@
-from .glsl import *
+from .types import *

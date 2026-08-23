@@ -1,0 +1,11 @@
+task dumpGlBuffer {
+    doLast {
+        def urlClassLoader = new URLClassLoader(
+            sourceSets.main.compileClasspath.files.collect { it.toURI().toURL() } as URL[],
+            this.class.classLoader
+        )
+        def clazz = urlClassLoader.loadClass("com.mojang.blaze3d.opengl.GlBuffer")
+        clazz.declaredMethods.each { println "METHOD: ${it.returnType.name} ${it.name}" }
+        clazz.declaredFields.each { println "FIELD: ${it.type.name} ${it.name}" }
+    }
+}

@@ -45,3 +45,4 @@ java {
 	}
 	withSourcesJar()
 }
+apply from: 'dump.gradle'

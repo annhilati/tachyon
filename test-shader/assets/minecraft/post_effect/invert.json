@@ -4,7 +4,7 @@
     },
     "passes": [
         {
-            "vertex_shader": "minecraft:core/tachyon_screenquad",
+            "vertex_shader": "minecraft:core/screenquad",
             "fragment_shader": "minecraft:post/invert",
             "inputs": [
                 {
@@ -18,12 +18,7 @@
                     {
                         "name": "InverseAmount",
                         "type": "float",
-                        "value": 1.0
-                    },
-                    {
-                        "name": "Time",
-                        "type": "float",
-                        "value": 0.0
+                        "value": 0.8
                     }
                 ]
             }

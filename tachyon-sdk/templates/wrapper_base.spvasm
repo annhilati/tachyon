@@ -12,14 +12,41 @@
                OpName %texCoord "texCoord"
                OpName %fragColor "fragColor"
                OpName %InSampler "InSampler"
+               
+               OpName %SamplerInfo "SamplerInfo"
+               OpMemberName %SamplerInfo 0 "OutSize"
+               OpMemberName %SamplerInfo 1 "InSize"
+               OpName %SamplerInfo_var "SamplerInfo"
+
+               OpName %InvertConfig "InvertConfig"
+               OpMemberName %InvertConfig 0 "InverseAmount"
+               OpMemberName %InvertConfig 1 "Time"
+               OpName %InvertConfig_var "InvertConfig"
+               
                OpDecorate %texCoord Location 0
                OpDecorate %fragColor Location 0
+               
                OpDecorate %InSampler Binding 0
                OpDecorate %InSampler DescriptorSet 0
+               
+               OpDecorate %SamplerInfo Block
+               OpMemberDecorate %SamplerInfo 0 Offset 0
+               OpMemberDecorate %SamplerInfo 1 Offset 8
+               OpDecorate %SamplerInfo_var Binding 0
+               OpDecorate %SamplerInfo_var DescriptorSet 0
+               
+               OpDecorate %InvertConfig Block
+               OpMemberDecorate %InvertConfig 0 Offset 0
+               OpMemberDecorate %InvertConfig 1 Offset 4
+               OpDecorate %InvertConfig_var Binding 1
+               OpDecorate %InvertConfig_var DescriptorSet 0
+
                OpDecorate %mojo_main LinkageAttributes "mojo_main" Import
        %void = OpTypeVoid
           %3 = OpTypeFunction %void
       %float = OpTypeFloat 32
+        %int = OpTypeInt 32 1
+      %int_1 = OpConstant %int 1
     %v4float = OpTypeVector %float 4
     %v2float = OpTypeVector %float 2
 %_ptr_Input_v2float = OpTypePointer Input %v2float
@@ -30,24 +57,39 @@
     %sampler = OpTypeSampledImage %image
 %_ptr_UniformConstant_sampler = OpTypePointer UniformConstant %sampler
   %InSampler = OpVariable %_ptr_UniformConstant_sampler UniformConstant
-         %12 = OpTypeFunction %v4float %v4float %v4float
- %float_0_299 = OpConstant %float 0.299
- %float_0_587 = OpConstant %float 0.587
- %float_0_114 = OpConstant %float 0.114
+
+%SamplerInfo = OpTypeStruct %v2float %v2float
+%_ptr_Uniform_SamplerInfo = OpTypePointer Uniform %SamplerInfo
+%SamplerInfo_var = OpVariable %_ptr_Uniform_SamplerInfo Uniform
+
+%InvertConfig = OpTypeStruct %float %float
+%_ptr_Uniform_InvertConfig = OpTypePointer Uniform %InvertConfig
+%InvertConfig_var = OpVariable %_ptr_Uniform_InvertConfig Uniform
+%_ptr_Uniform_float = OpTypePointer Uniform %float
+
+         %12 = OpTypeFunction %v4float %v4float %float %v4float
+
+ %float_0_333 = OpConstant %float 0.333
+ %float_0_5 = OpConstant %float 0.5
    %float_1_0 = OpConstant %float 1.0
-    %weights = OpConstantComposite %v4float %float_0_299 %float_0_587 %float_0_114 %float_1_0
+    %weights = OpConstantComposite %v4float %float_0_333 %float_0_5 %float_0_5 %float_1_0
 
        %main = OpFunction %void None %3
          %15 = OpLabel
          %16 = OpLoad %v2float %texCoord
          %17 = OpLoad %sampler %InSampler
          %18 = OpImageSampleImplicitLod %v4float %17 %16
-         %19 = OpFunctionCall %v4float %mojo_main %18 %weights
+         
+         %46 = OpAccessChain %_ptr_Uniform_float %InvertConfig_var %int_1
+   %time_val = OpLoad %float %46
+   
+         %19 = OpFunctionCall %v4float %mojo_main %18 %time_val %weights
                OpStore %fragColor %19
                OpReturn
                OpFunctionEnd
 
   %mojo_main = OpFunction %v4float None %12
      %param1 = OpFunctionParameter %v4float
-     %param2 = OpFunctionParameter %v4float
+     %param2 = OpFunctionParameter %float
+     %param3 = OpFunctionParameter %v4float
                OpFunctionEnd

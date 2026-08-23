@@ -1,6 +1,8 @@
-from tachyon import Vec4
+from tachyon import Vec4, Float
 
 @export
-def mojo_main(color: Vec4, weights: Vec4) -> Vec4:
-    var gray = color[0] * weights[0] + color[1] * weights[1] + color[2] * weights[2]
-    return Vec4(gray, gray, gray, weights[3])
+def mojo_main(color: Vec4, time: Float, weights: Vec4) abi("C") -> Vec4:
+    var gray = (color[0] + color[1] + color[2]) * weights[0]
+    var wobble = gray * time
+    
+    return Vec4(wobble, wobble, wobble, 1.0)

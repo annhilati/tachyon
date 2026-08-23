@@ -4,7 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "GlDeviceMixin",
-    "GlProgramMixin"
+    "GlProgramMixin", "PostPassTimeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
