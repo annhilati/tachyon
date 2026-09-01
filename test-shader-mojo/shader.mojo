@@ -1,4 +1,4 @@
-from tachyon import Vec4, Float
+from tachyon import *
 
 @export
 def mojo_main(color: Vec4, time: Float, weights: Vec4) abi("C") -> Vec4:

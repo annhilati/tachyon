@@ -26,13 +26,14 @@ public class GlDeviceMixin {
 
     @Inject(method = "getOrCompileShader", at = @At("HEAD"), cancellable = true)
     private void onGetOrCompileShader(Identifier id, ShaderType type, ShaderDefines defines, ShaderSource source, CallbackInfoReturnable<GlShaderModule> cir) {
+        String namespace = id.getNamespace();
         String name = id.getPath();
         
-        if (name != null && (name.contains("invert") || name.contains("tachyon_screenquad"))) {
-            TachyonMod.LOGGER.info("SPIR-V Target erkannt: " + name + " (Type: " + type + "). Überschreibe GLSL Kompilierung...");
+        if ("tachyon".equals(namespace) && (name.contains("main") || name.contains("screenquad"))) {
+            TachyonMod.LOGGER.info("SPIR-V Target erkannt: " + id.toString() + " (Type: " + type + "). Überschreibe GLSL Kompilierung...");
 
             try {
-                String spvFileName = name.contains("tachyon_screenquad") ? "screenquad.spv" : "post_desaturate.spv";
+                String spvFileName = name.contains("screenquad") ? "screenquad.spv" : "post_desaturate.spv";
                 // runClient hat sein Arbeitsverzeichnis in tachyon/run/
                 Path spvPath = Paths.get("..", "..", "test-shader", "dummy", spvFileName).normalize().toAbsolutePath();
                 

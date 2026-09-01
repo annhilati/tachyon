@@ -1,1 +1,3 @@
 *.spvasm linguist-language=LLVM
+
+**/assets/**/*.json linguist-detectable=true

@@ -8,15 +8,15 @@ layout(binding = 0, std140) uniform SamplerInfo {
     vec2 InSize;
 };
 
-layout(binding = 1, std140) uniform InvertConfig {
+layout(binding = 1, std140) uniform TachyonConfig {
     float InverseAmount;
     float Time;
-} InvertConfig_inst;
+} TachyonConfig_inst;
 
 vec4 mojo_main(vec4 color, float time, vec4 weights) { return color; }
 
 void main() {
     vec4 color = texture(InSampler, texCoord);
     vec4 weights = vec4(0.333, 0.5, 0.5, 1.0);
-    fragColor = mojo_main(color, InvertConfig_inst.Time, weights);
+    fragColor = mojo_main(color, TachyonConfig_inst.Time, weights);
 }

@@ -4,8 +4,8 @@
     },
     "passes": [
         {
-            "vertex_shader": "minecraft:core/tachyon_screenquad",
-            "fragment_shader": "minecraft:post/invert",
+            "vertex_shader": "tachyon:core/screenquad",
+            "fragment_shader": "tachyon:post/main",
             "inputs": [
                 {
                     "sampler_name": "In",
@@ -14,7 +14,7 @@
             ],
             "output": "swap",
             "uniforms": {
-                "InvertConfig": [
+                "TachyonConfig": [
                     {
                         "name": "InverseAmount",
                         "type": "float",

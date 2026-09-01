@@ -21,8 +21,8 @@ public abstract class PostPassTimeMixin {
 
     @Inject(method = "addToFrame", at = @At("HEAD"))
     private void onAddToFrame(FrameGraphBuilder builder, Map<?, ?> inputs, GpuBufferSlice output, CallbackInfo ci) {
-        if (this.customUniforms != null && this.customUniforms.containsKey("InvertConfig")) {
-            GpuBuffer uboBuffer = this.customUniforms.get("InvertConfig");
+        if (this.customUniforms != null && this.customUniforms.containsKey("TachyonConfig")) {
+            GpuBuffer uboBuffer = this.customUniforms.get("TachyonConfig");
             if (uboBuffer != null && !uboBuffer.isClosed()) {
                 try {
                     Method handleMethod = uboBuffer.getClass().getMethod("handle");
@@ -40,7 +40,7 @@ public abstract class PostPassTimeMixin {
                         if (size >= 8) {
                             GL15.glBufferSubData(GL31.GL_UNIFORM_BUFFER, 4, new float[]{pulse});
                         } else {
-                            System.out.println("[Tachyon] WARNING: InvertConfig UBO size is " + size + ". Expected 8!");
+                            System.out.println("[Tachyon] WARNING: TachyonConfig UBO size is " + size + ". Expected 8!");
                         }
                         GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
                     }

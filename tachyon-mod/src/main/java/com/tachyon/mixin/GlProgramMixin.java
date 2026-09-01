@@ -17,7 +17,7 @@ public abstract class GlProgramMixin {
     @Inject(method = "setupBindGroupLayouts", at = @At("RETURN"))
     private void onSetupBindGroupLayouts(java.util.List<?> layouts, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
         String label = getDebugLabel();
-        if (label != null && label.contains("invert")) {
+        if (label != null && label.contains("tachyon:post/main")) {
             if (!this.uniformsByName.containsKey("InSampler")) {
                 // Füge den Sampler manuell für Texture Unit 0 hinzu!
                 // Minecraft sucht explizit nach 'InSampler' (hängt 'Sampler' an den JSON-Namen an).
