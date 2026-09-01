@@ -1,0 +1,7 @@
+# Generated files
+*.spv
+*.bc
+*.ll
+
+# Pixi
+.pixi/
