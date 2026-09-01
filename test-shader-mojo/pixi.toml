@@ -10,5 +10,5 @@ platforms = ["linux-64", "osx-arm64"]
 mojo = "*"
 
 [tasks]
-build = "cd ../tachyon-sdk-mojo && pixi run mojo run tachyon/_cli.mojo ../test-shader-mojo/shader.mojo -o ../test-shader-mojo/dummy/post_desaturate.spv"
+build = "cd ../tachyon-sdk-mojo && pixi run mojo run tachyon/_cli.mojo ../test-shader-mojo/shader.mojo -o ../tachyon-mod/run/shaderpacks/shader"
 clean = "rm -f dummy/*.spv tachyon_post.spv"

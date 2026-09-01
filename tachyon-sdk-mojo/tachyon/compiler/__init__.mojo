@@ -68,17 +68,17 @@ def patch_spirv_wrapper(filepath: String, function_name: String) raises:
     f_out.write(content)
     f_out.close()
 
-def compile(input: String, output: String = "tachyon_post.spv") raises:
-    if len(args) < 2:
-        print("Usage: tachyon_cli <shader.mojo> [-o <output.spv>]")
-        return
-        
+def compile(cli_path: String, input: String, output_dir: String = "shader", do_zip: Bool = False) raises:
     var shader_file = input
-    var out_file = output
         
     var os = Python.import_module("os")
+    
+    # Create the output directory
+    os.makedirs(output_dir, exist_ok=True)
+    var out_file = os.path.join(output_dir, "shader.spv")
+    
     # Make this path resolving safe
-    var sdk_dir = os.path.dirname(os.path.dirname(os.path.abspath(args[0])))
+    var sdk_dir = os.path.dirname(os.path.dirname(os.path.abspath(cli_path)))
     var template_frag = os.path.join(sdk_dir, "compiler", "wrapper.frag")
     var tachyon_lib = sdk_dir
     
@@ -137,20 +137,13 @@ def compile(input: String, output: String = "tachyon_post.spv") raises:
     run_command(cmd6e)
     
     print("[5/6] Linking Mojo Core with GLSL Wrappers...")
-    # Link Fragment
-    var cmd7 = List[String]("spirv-link", "shader_logical.spv", "wrapper_manual.spv", "-o", out_file)
+    # Link Everything into a single SPV module (SPIR-V supports multiple entry points!)
+    var cmd7 = List[String]("spirv-link", "shader_logical.spv", "wrapper_manual.spv", "wrapper_vert_manual.spv", "-o", out_file)
     run_command(cmd7)
     
-    # Link Vertex
-    var screenquad_out = os.path.join(os.path.dirname(out_file), "screenquad.spv")
-    var cmd7a = List[String]("spirv-link", "shader_logical.spv", "wrapper_vert_manual.spv", "-o", screenquad_out)
-    run_command(cmd7a)
-    
-    print("[6/6] Validating Final Shaders...")
+    print("[6/6] Validating Final Shader...")
     var cmd8 = List[String]("spirv-val", "--target-env", "opengl4.0", out_file)
     run_command(cmd8)
-    var cmd8a = List[String]("spirv-val", "--target-env", "opengl4.0", screenquad_out)
-    run_command(cmd8a)
     
     # Cleanup
     var files_to_remove = List[String]("shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "wrapper_raw.spv", "wrapper_raw.spvasm", "wrapper_manual.spv", "wrapper_vert_raw.spv", "wrapper_vert_raw.spvasm", "wrapper_vert_manual.spv")
@@ -159,6 +152,11 @@ def compile(input: String, output: String = "tachyon_post.spv") raises:
             os.remove(files_to_remove[i])
         except:
             pass
+            
+    if do_zip:
+        var shutil = Python.import_module("shutil")
+        _ = shutil.make_archive(output_dir, "zip", output_dir)
+        print("Zipped shaderpack into " + output_dir + ".zip")
             
     print("=================================")
     print(" SUCCESS! Shader is ready.       ")
