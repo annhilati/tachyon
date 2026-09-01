@@ -1,12 +1,6 @@
-<!-- 
-/*/=====================================================================================/+/
+# Tachyon Project
 
-	Tachyon
+### Subprojects
 
-	Copyright (C) 2026 Annhilati
-
-	Description: (...)
-	Reference: (...)
-
-/+/=====================================================================================/*/ 
--->
+- **Tachyon** Mod: Fabric Mod that can load SPIR-V-shaders
+- **Tachyon Mojo SDK**: Mojo library for writing and compiling SPIR-V shaders

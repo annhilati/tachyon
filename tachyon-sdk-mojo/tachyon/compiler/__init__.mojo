@@ -47,7 +47,7 @@ def patch_spirv_asm(filepath: String) raises:
     f_out.write(content)
     f_out.close()
 
-def patch_spirv_wrapper(filepath: String) raises:
+def patch_spirv_wrapper(filepath: String, function_name: String) raises:
     var builtins = Python.import_module("builtins")
     var re = Python.import_module("re")
     
@@ -56,31 +56,30 @@ def patch_spirv_wrapper(filepath: String) raises:
     f_in.close()
     
     # Add Import Decorator
-    content = str(re.sub(r'(OpName %mojo_main "mojo_main"\n)', r'\1               OpDecorate %mojo_main LinkageAttributes "mojo_main" Import\n', content))
+    var pattern1 = r'(OpName %' + function_name + r' "' + function_name + r'"\n)'
+    var repl1 = r'\1               OpDecorate %' + function_name + r' LinkageAttributes "' + function_name + r'" Import\n'
+    content = str(re.sub(pattern1, repl1, content))
     
     # Strip body
-    content = str(re.sub(r'(%mojo_main = OpFunction.*?\n(?:.*?OpFunctionParameter.*?\n)*?)(?:\s*%\d+\s*=\s*OpLabel.*?\n)(?:.*?\n)*?(?=\s*OpFunctionEnd)', r'\1', content, flags=re.DOTALL))
+    var pattern2 = r'(%' + function_name + r' = OpFunction.*?\n(?:.*?OpFunctionParameter.*?\n)*?)(?:\s*%\d+\s*=\s*OpLabel.*?\n)(?:.*?\n)*?(?=\s*OpFunctionEnd)'
+    content = str(re.sub(pattern2, r'\1', content, flags=re.DOTALL))
     
     var f_out = builtins.open(filepath, "w")
     f_out.write(content)
     f_out.close()
 
-def main() raises:
-    var args = sys.argv()
+def compile(input: String, output: String = "tachyon_post.spv") raises:
     if len(args) < 2:
         print("Usage: tachyon_cli <shader.mojo> [-o <output.spv>]")
         return
         
-    var shader_file = args[1]
-    var out_file = "tachyon_post.spv"
-    
-    if len(args) >= 4:
-        if args[2] == "-o":
-            out_file = args[3]
-    
+    var shader_file = input
+    var out_file = output
+        
     var os = Python.import_module("os")
+    # Make this path resolving safe
     var sdk_dir = os.path.dirname(os.path.dirname(os.path.abspath(args[0])))
-    var template_frag = os.path.join(sdk_dir, "templates", "wrapper.frag")
+    var template_frag = os.path.join(sdk_dir, "compiler", "wrapper.frag")
     var tachyon_lib = sdk_dir
     
     print("=================================")
@@ -109,28 +108,52 @@ def main() raises:
     var cmd5 = List[String]("spirv-as", "shader.spvasm", "-o", "shader_logical.spv")
     run_command(cmd5)
     
-    print("[4/6] Building and Patching GLSL Wrapper...")
+    print("[4/6] Building and Patching GLSL Wrappers...")
+    var template_frag = os.path.join(sdk_dir, "compiler", "wrapper.frag")
+    var template_vert = os.path.join(sdk_dir, "compiler", "wrapper.vert")
+    
+    # --- Fragment Wrapper ---
     var cmd6 = List[String]("glslangValidator", "-V", str(template_frag), "-o", "wrapper_raw.spv")
     run_command(cmd6)
     
     var cmd6a = List[String]("spirv-dis", "wrapper_raw.spv", "-o", "wrapper_raw.spvasm")
     run_command(cmd6a)
     
-    patch_spirv_wrapper("wrapper_raw.spvasm")
+    patch_spirv_wrapper("wrapper_raw.spvasm", "tachyon_main")
     
     var cmd6b = List[String]("spirv-as", "wrapper_raw.spvasm", "-o", "wrapper_manual.spv")
     run_command(cmd6b)
     
-    print("[5/6] Linking Mojo Core with GLSL Wrapper...")
+    # --- Vertex Wrapper ---
+    var cmd6c = List[String]("glslangValidator", "-V", str(template_vert), "-o", "wrapper_vert_raw.spv")
+    run_command(cmd6c)
+    
+    var cmd6d = List[String]("spirv-dis", "wrapper_vert_raw.spv", "-o", "wrapper_vert_raw.spvasm")
+    run_command(cmd6d)
+    
+    patch_spirv_wrapper("wrapper_vert_raw.spvasm", "tachyon_vert_main")
+    
+    var cmd6e = List[String]("spirv-as", "wrapper_vert_raw.spvasm", "-o", "wrapper_vert_manual.spv")
+    run_command(cmd6e)
+    
+    print("[5/6] Linking Mojo Core with GLSL Wrappers...")
+    # Link Fragment
     var cmd7 = List[String]("spirv-link", "shader_logical.spv", "wrapper_manual.spv", "-o", out_file)
     run_command(cmd7)
     
-    print("[6/6] Validating Final Shader...")
+    # Link Vertex
+    var screenquad_out = os.path.join(os.path.dirname(out_file), "screenquad.spv")
+    var cmd7a = List[String]("spirv-link", "shader_logical.spv", "wrapper_vert_manual.spv", "-o", screenquad_out)
+    run_command(cmd7a)
+    
+    print("[6/6] Validating Final Shaders...")
     var cmd8 = List[String]("spirv-val", "--target-env", "opengl4.0", out_file)
     run_command(cmd8)
+    var cmd8a = List[String]("spirv-val", "--target-env", "opengl4.0", screenquad_out)
+    run_command(cmd8a)
     
     # Cleanup
-    var files_to_remove = List[String]("shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "wrapper_raw.spv", "wrapper_raw.spvasm", "wrapper_manual.spv")
+    var files_to_remove = List[String]("shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "wrapper_raw.spv", "wrapper_raw.spvasm", "wrapper_manual.spv", "wrapper_vert_raw.spv", "wrapper_vert_raw.spvasm", "wrapper_vert_manual.spv")
     for i in range(len(files_to_remove)):
         try:
             os.remove(files_to_remove[i])

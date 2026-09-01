@@ -3,7 +3,9 @@
 	Tachyon Mod
 
 	Copyright (C) 2026 Annhilati
-	Apache License 2.0
+	
+    Description: Vertex shader for post-processing. Generates a single full-screen 
+        triangle using gl_VertexID to bypass external vertex buffers.
 
 \*================================================================================*/
 

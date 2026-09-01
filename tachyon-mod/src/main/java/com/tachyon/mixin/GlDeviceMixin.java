@@ -35,11 +35,11 @@ public class GlDeviceMixin {
             try {
                 String spvFileName = name.contains("screenquad") ? "screenquad.spv" : "post_desaturate.spv";
                 // runClient hat sein Arbeitsverzeichnis in tachyon/run/
-                Path spvPath = Paths.get("..", "..", "test-shader", "dummy", spvFileName).normalize().toAbsolutePath();
+                Path spvPath = Paths.get("..", "..", "test-shader-mojo", "dummy", spvFileName).normalize().toAbsolutePath();
                 
                 if (!Files.exists(spvPath)) {
                     // Fallback für den Fall, dass die Mod außerhalb von runClient gestartet wird (z.B. im Root)
-                    spvPath = Paths.get("test-shader", "dummy", spvFileName).normalize().toAbsolutePath();
+                    spvPath = Paths.get("test-shader-mojo", "dummy", spvFileName).normalize().toAbsolutePath();
                 }
 
                 if (!Files.exists(spvPath)) {
