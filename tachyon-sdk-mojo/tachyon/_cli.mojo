@@ -1,6 +1,6 @@
 import sys
 
-from .compiler.__init__ import compile
+from .compiler import compile
 
 def main() raises:
     var args = sys.argv()
