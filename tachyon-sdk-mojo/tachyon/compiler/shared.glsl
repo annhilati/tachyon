@@ -10,7 +10,6 @@
 
 // System Configuration Block (Injected by Java Mixin)
 layout(binding = 1, std140) uniform TachyonConfig {
-    float InverseAmount;
     float Time;
 } TachyonConfig_inst;
 

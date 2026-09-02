@@ -37,10 +37,10 @@ public abstract class PostPassTimeMixin {
                         
                         // Check buffer size to prevent GL_INVALID_VALUE
                         int size = GL15.glGetBufferParameteri(GL31.GL_UNIFORM_BUFFER, GL15.GL_BUFFER_SIZE);
-                        if (size >= 8) {
-                            GL15.glBufferSubData(GL31.GL_UNIFORM_BUFFER, 4, new float[]{pulse});
+                        if (size >= 4) {
+                            GL15.glBufferSubData(GL31.GL_UNIFORM_BUFFER, 0, new float[]{pulse});
                         } else {
-                            System.out.println("[Tachyon] WARNING: TachyonConfig UBO size is " + size + ". Expected 8!");
+                            System.out.println("[Tachyon] WARNING: TachyonConfig UBO size is " + size + ". Expected 4!");
                         }
                         GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
                     }

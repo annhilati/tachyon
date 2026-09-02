@@ -79,7 +79,7 @@ def compile(cli_path: String, input: String, output_dir: String = "shader", do_z
     
     # Make this path resolving safe
     var sdk_dir = os.path.dirname(os.path.dirname(os.path.abspath(cli_path)))
-    var template_frag = os.path.join(sdk_dir, "compiler", "wrapper.frag")
+    var template_frag = os.path.join(sdk_dir, "compiler", "runtime.frag")
     var tachyon_lib = sdk_dir
     
     print("=================================")
@@ -109,8 +109,8 @@ def compile(cli_path: String, input: String, output_dir: String = "shader", do_z
     run_command(cmd5)
     
     print("[4/6] Building and Patching GLSL Wrappers...")
-    var template_frag = os.path.join(sdk_dir, "compiler", "wrapper.frag")
-    var template_vert = os.path.join(sdk_dir, "compiler", "wrapper.vert")
+    var template_frag = os.path.join(sdk_dir, "compiler", "runtime.frag")
+    var template_vert = os.path.join(sdk_dir, "compiler", "runtime.vert")
     
     # --- Fragment Wrapper ---
     var cmd6 = List[String]("glslangValidator", "-V", str(template_frag), "-o", "wrapper_raw.spv")

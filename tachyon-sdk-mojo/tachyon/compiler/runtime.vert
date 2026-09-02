@@ -4,7 +4,7 @@
 
 	Copyright (C) 2026 Annhilati
 	
-    Description: Vertex Shader Wrapper.
+    Description: Vertex Shader Runtime.
 
 \*================================================================================*/
 

@@ -16,11 +16,6 @@
             "uniforms": {
                 "TachyonConfig": [
                     {
-                        "name": "InverseAmount",
-                        "type": "float",
-                        "value": 1.0
-                    },
-                    {
                         "name": "Time",
                         "type": "float",
                         "value": 0.0

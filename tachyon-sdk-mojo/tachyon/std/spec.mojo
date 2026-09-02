@@ -1,28 +1,33 @@
 from sys.ffi import external_call
 
 @always_inline
-def hash_spec_name(name: StringLiteral) -> Int32:
-    """Konvertiert einen String (defV-1a) in eine deterministische 32-Bit ID."""
+def _FNV_1a(s: StringLiteral) -> UInt32:
     var hash: UInt32 = 2166136261
     var prime: UInt32 = 16777619
-    var s = StringRef(name)
+    
+    var s = StringRef(s)
+    var ptr = s.data()
+    
     for i in range(len(s)):
-        hash ^= s[i].cast[DType.uint32]()
+        hash ^= ptr[i].cast[DType.uint32]()
         hash &*= prime
     
-    # Positive 32-Bit Integer maskieren
-    return (hash & 0x7FFFFFFF).cast[DType.int32]()
+    return hash
 
 
 @always_inline
-def spec_constant[type: DType](name: StringLiteral, default_val: SIMD[type, 1]) -> SIMD[type, 1]:
-    var id = hash_spec_name(name)
+def Option[type: DType, name: StringLiteral](default: SIMD[type, 1]) -> SIMD[type, 1]:
+    """Registers an variable open to the shader settings.
+    
+    The variables used here are SPIR-V specialization constants.
+    """
+    var id = _FNV_1a(name)
 
     comptime if type == DType.float32:
-        return external_call["_Z20__spirv_SpecConstantif", Float32](id, default_val)
+        return external_call["_Z20__spirv_SpecConstantif", Float32](id, default)
     elif type == DType.int32:
-        return external_call["_Z20__spirv_SpecConstantii", Int32](id, default_val)
+        return external_call["_Z20__spirv_SpecConstantii", Int32](id, default)
     elif type == DType.bool:
-        return external_call["_Z20__spirv_SpecConstantib", Bool](id, default_val)
+        return external_call["_Z20__spirv_SpecConstantib", Bool](id, default)
     else:
-        return default_val
+        raise
