@@ -1,5 +1,7 @@
 # Tachyon Project
 
+This project is about making the absurd possible
+
 ### Subprojects
 
 - [**Tachyon** Mod](tachyon-mod/README.md): Fabric Mod that can load SPIR-V-shaders

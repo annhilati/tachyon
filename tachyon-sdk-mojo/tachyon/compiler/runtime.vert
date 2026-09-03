@@ -11,9 +11,11 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
 
-out vec2 texCoord;
+out vec2 texCoord; // used by runtime.frag
+out vec4 gl_Position;
 
-#include "shared.glsl"
+#include "runtime.glsl"
+#include "std_bindings.glsl"
 
 vec4 tachyon_vert_main(vec4 pos, vec2 uv, float time) { return pos; }
 

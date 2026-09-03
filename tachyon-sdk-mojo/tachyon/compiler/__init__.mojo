@@ -28,6 +28,8 @@ def patch_llvm_ir(filepath: String) raises:
 def patch_spirv_asm(filepath: String) raises:
     var builtins = Python.import_module("builtins")
     var re = Python.import_module("re")
+    var os = Python.import_module("os")
+    var json = Python.import_module("json")
     
     var f_in = builtins.open(filepath, "r")
     var content: String = f_in.read()
@@ -38,7 +40,37 @@ def patch_spirv_asm(filepath: String) raises:
     content = content.replace("OpCapability Kernel\n", "")
     content = content.replace("OpCapability Int64\n", "")
     
+    # 1. GLSL.std.450 importieren (falls es noch nicht da ist)
+    if "GLSL.std.450" not in content:
+        content = content.replace("OpMemoryModel Logical GLSL450\n", "OpMemoryModel Logical GLSL450\n%glsl_std_450 = OpExtInstImport \"GLSL.std.450\"\n")
+    
+    # OpenCL.std entfernen (brauchen wir nicht mehr, da Mojo's math lib nicht genutzt wird)
     content = str(re.sub(r'^\s*%\d+\s*=\s*OpExtInstImport\s+"OpenCL\.std"\n', "", content, flags=re.MULTILINE))
+    
+    # 2. Tachyon Compiler Magic auflösen (OpName %X "tachyon_extinst_Y")
+    var extinst_pattern = r'OpName\s+(%\w+)\s+"tachyon_extinst_(\d+)"'
+    var matches = re.findall(extinst_pattern, content)
+    for i in range(len(matches)):
+        var func_id = str(matches[i][0])
+        var opcode = str(matches[i][1])
+        
+        # Aufrufe überschreiben: %res = OpFunctionCall %type %func_id %arg1 -> %res = OpExtInst %type %glsl_std_450 opcode %arg1
+        var call_pattern = r'OpFunctionCall\s+(%\w+)\s+' + func_id + r'\s+(%\w+)'
+        var call_repl = r'OpExtInst \g<1> %glsl_std_450 ' + opcode + r' \g<2>'
+        content = str(re.sub(call_pattern, call_repl, content))
+        
+        # Aufrufe mit ZWEI Parametern (z.B. pow(x, y)): %res = OpFunctionCall %type %func_id %arg1 %arg2
+        var call_pattern_2 = r'OpFunctionCall\s+(%\w+)\s+' + func_id + r'\s+(%\w+)\s+(%\w+)'
+        var call_repl_2 = r'OpExtInst \g<1> %glsl_std_450 ' + opcode + r' \g<2> \g<3>'
+        content = str(re.sub(call_pattern_2, call_repl_2, content))
+        
+        # Dummy-Deklaration aus der Datei löschen
+        var decl_pattern = func_id + r'\s*=\s*OpFunction[\s\S]*?OpFunctionEnd\n'
+        content = str(re.sub(decl_pattern, "", content))
+        
+        content = str(re.sub(r'^\s*OpName\s+' + func_id + r'.*\n', "", content, flags=re.MULTILINE))
+        content = str(re.sub(r'^\s*OpDecorate\s+' + func_id + r'.*\n', "", content, flags=re.MULTILINE))
+            
     content = str(re.sub(r'^\s*OpDecorate\s+%\d+\s+Alignment\s+\d+\n', "", content, flags=re.MULTILINE))
     content = str(re.sub(r'^\s*OpLifetimeStart\s+%\d+\s+\d+\n', "", content, flags=re.MULTILINE))
     content = str(re.sub(r'^\s*OpLifetimeStop\s+%\d+\s+\d+\n', "", content, flags=re.MULTILINE))
