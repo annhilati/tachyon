@@ -3,7 +3,7 @@ name = "tachyon-sdk"
 version = "0.1.0"
 description = "Tachyon Mojo SDK"
 authors = ["Annhilati"]
-channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge", "https://repo.prefix.dev/modular-community"]
 platforms = ["linux-64", "osx-arm64"]
 
 [dependencies]
@@ -13,6 +13,7 @@ llvm = ">=22.1.8,<23"
 llvm-tools = ">=22.1.8,<23"
 spirv-tools = ">=2026.3,<2027"
 glslang = ">=15.1.0"
+argmojo = "==0.8.0"
 
 [tasks]
 build-compiler = "mojo build tachyon/_cli.mojo -o tachyon"
