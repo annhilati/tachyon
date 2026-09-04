@@ -51,13 +51,19 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     patch_spirv_asm("shader.spvasm")
     
     print("Assembling patched SPIR-V Binary...")
-    run_command("spirv-as shader.spvasm -o shader_logical.spv")
+    run_command("spirv-as --target-env spv1.1 shader.spvasm -o shader_logical.spv")
     
+    var py_shutil = Python.import_module("shutil")
+    var compiler_lib_dir = abs_tachyon_lib + "/tachyon/compiler/lib"
+    _ = py_shutil.copyfile(compiler_lib_dir + "/runtime.frag", "runtime.frag")
+    _ = py_shutil.copyfile(compiler_lib_dir + "/runtime.vert", "runtime.vert")
+    _ = py_shutil.copyfile(compiler_lib_dir + "/runtime.glsl", "runtime.glsl")
+
     for wrapper in ["runtime.frag", "runtime.vert"]:
         print("Compiling Runtime: " + wrapper + "...")
 
         print("Compiling GLSL to SPIR-V Binary")
-        run_command("glslangValidator -V " + wrapper + " -o " + wrapper + ".spv")
+        run_command("glslangValidator -V --target-env spirv1.1 " + wrapper + " -o " + wrapper + ".spv")
     
         print("Disassembling to SPIR-V Assembly...")
         run_command("spirv-dis " + wrapper + ".spv -o " + wrapper + ".spvasm")
@@ -66,14 +72,16 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
         patch_spirv_wrapper(wrapper + ".spvasm", "tachyon_main") # The function specification does not work yet
     
         print("Assembling patched SPIR-V Binary...")
-        run_command("spirv-as " + wrapper + ".spvasm -o " + wrapper + ".manual.spv")
+        run_command("spirv-as --target-env spv1.1 " + wrapper + ".spvasm -o " + wrapper + ".manual.spv")
 
+
+    var abs_out_file = abs_output_dir + "/shader.spv"
 
     print("Linking Core Shader with Runtime...")
-    run_command("spirv-link shader_logical.spv runtime.frag.manual.spv runtime.vert.manual.spv -o " + out_file.__fspath__())
+    run_command("spirv-link shader_logical.spv runtime.frag.manual.spv runtime.vert.manual.spv -o " + abs_out_file)
     
     print("Validating...")
-    run_command("spirv-val --target-env opengl4.0 " + out_file.__fspath__())
+    run_command("spirv-val --target-env spv1.1 " + abs_out_file)
     
     # Cleanup
     var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv"]
@@ -94,8 +102,7 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
 
 
 def run_command(cmd: String) raises:
-    print("Run:", cmd)
-    
+    # print("Run:", cmd)
     _ = run(cmd)
 
 def patch_llvm_ir(filepath: String) raises:
@@ -130,7 +137,7 @@ def patch_spirv_asm(filepath: String) raises:
     content = String(re.sub(r'^\s*%\d+\s*=\s*OpExtInstImport\s+"OpenCL\.std"\n', "", content, flags=re.MULTILINE))
     
     # 2. Tachyon Compiler Magic auflösen (OpName %X "tachyon_extinst_Y")
-    var extinst_pattern = r'OpName\s+(%\w+)\s+"tachyon_extinst_(\d+)"'
+    var extinst_pattern = r'OpName\s+(%\w+)\s+"tachyon_extinst_(\w+)"'
     var matches = re.findall(extinst_pattern, content)
     for i in range(len(matches)):
         var func_id = String(matches[i][0])

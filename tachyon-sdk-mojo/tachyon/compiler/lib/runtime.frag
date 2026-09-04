@@ -17,7 +17,9 @@ layout(location = 0) in vec2 texCoord;              // provided by runtime.vert
 layout(location = 0) out vec4 fragColor;            // used by Minecraft
 
 
-vec4 tachyon_main(vec4 color, float time);
+vec4 tachyon_main(vec4 color, float time) {
+    return vec4(0.0);
+}
 
 void main() {
     vec4 color = texture(InSampler, texCoord);

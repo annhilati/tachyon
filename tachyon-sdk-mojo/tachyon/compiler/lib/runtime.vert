@@ -11,17 +11,15 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
 
-out vec2 texCoord; // used by runtime.frag
-out vec4 gl_Position;
+layout(location = 0) out vec2 texCoord; // used by runtime.frag
 
 #include "runtime.glsl"
-#include "std_bindings.glsl"
 
 vec4 tachyon_vert_main(vec4 pos, vec2 uv, float time) { return pos; }
 
 void main() {
     // Generate Big Triangle geometry
-    vec2 uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+    vec2 uv = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
     vec4 pos = vec4(uv * vec2(2, 2) + vec2(-1, -1), 0, 1);
     
     // Call Mojo to optionally modify the vertex position

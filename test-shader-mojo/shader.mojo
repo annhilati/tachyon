@@ -1,5 +1,5 @@
 from tachyon import *
-from std.math import sin
+
 
 @export
 def tachyon_main(color: Vec4, time: Float) abi("C") -> Vec4:
