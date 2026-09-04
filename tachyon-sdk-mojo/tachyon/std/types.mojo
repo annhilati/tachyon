@@ -44,13 +44,3 @@ struct Mat4:
     var c1: Vec4
     var c2: Vec4
     var c3: Vec4
-
-# Minecraft Uniforms (Global Context)
-@value
-struct MinecraftUniforms:
-    var ProjMat: Mat4
-    var ViewMat: Mat4
-    var ModelViewMat: Mat4
-    var GameTime: Float
-    var FogColor: Vec4
-    var ScreenSize: Vec2
