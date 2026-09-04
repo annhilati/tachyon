@@ -76,8 +76,8 @@ public class GlDeviceMixin {
                 cir.setReturnValue(module);
                 cir.cancel();
 
-            } catch (IOException e) {
-                TachyonMod.LOGGER.error("Fehler beim Lesen der .spv Datei: ", e);
+            } catch (Exception e) {
+                TachyonMod.LOGGER.error("Fehler beim Verarbeiten des Shaders: ", e);
             }
         }
     }

@@ -11,5 +11,4 @@ mojo = "*"
 python = ">=3.14.7,<3.15"
 
 [tasks]
-build = "cd ../tachyon-sdk-mojo && ~/.pixi/bin/pixi run ./tachyon_compiler ../test-shader-mojo/shader.mojo -o ../tachyon-mod/run/shaderpacks/shader"
-clean = "rm -f dummy/*.spv tachyon_post.spv"
+build = "cd ../tachyon-sdk-mojo && ~/.pixi/bin/pixi run mojo run cli.mojo ../test-shader-mojo/shader.mojo -o ../tachyon-mod/run/shaderpacks/shader"

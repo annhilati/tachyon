@@ -2,10 +2,10 @@ package com.tachyon;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -38,19 +38,25 @@ public class TachyonMod implements ClientModInitializer {
             LOGGER.error("Konnte shaderpacks Ordner nicht erstellen!", e);
         }
 
-        toggleShaderKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        toggleShaderKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.tachyon.toggle_shader",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_O,
-            "category.tachyon.general"
+            KeyMapping.Category.register(Identifier.fromNamespaceAndPath("tachyon", "general"))
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (toggleShaderKey.consumeClick()) {
-                if (client.gameRenderer.currentEffect() != null) {
-                    client.gameRenderer.shutdownEffect();
+                if (client.gameRenderer.currentPostEffect() != null) {
+                    client.gameRenderer.clearPostEffect();
                 } else {
-                    client.gameRenderer.loadEffect(ResourceLocation.fromNamespaceAndPath("tachyon", "post_effect/main.json"));
+                    try {
+                        java.lang.reflect.Method m = client.gameRenderer.getClass().getDeclaredMethod("setPostEffect", Identifier.class);
+                        m.setAccessible(true);
+                        m.invoke(client.gameRenderer, Identifier.fromNamespaceAndPath("tachyon", "main"));
+                    } catch (Exception e) {
+                        LOGGER.error("Fehler beim Aktivieren des Post-Effects", e);
+                    }
                 }
             }
         });

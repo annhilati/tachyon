@@ -17,7 +17,6 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     
     # Create the output directory
     os.makedirs(output_dir, exist_ok=True)
-    var out_file = Path(String(output_dir.__fspath__()) + "/shader.spv")
 
     var py_os = Python.import_module("os")
     var abs_shader_file = String(py_os.path.abspath(String(shader_file.__fspath__())))
@@ -25,6 +24,7 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     var abs_tachyon_lib = String(py_os.path.abspath(tachyon_lib))
     
     var temp_dir = mkdtemp()
+    print("Temp dir: " + String(temp_dir.__fspath__()))
     py_os.chdir(temp_dir)
     
     
@@ -61,8 +61,6 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
 
     for wrapper in ["runtime.frag", "runtime.vert"]:
         print("Compiling Runtime: " + wrapper + "...")
-
-        print("Compiling GLSL to SPIR-V Binary")
         run_command("glslangValidator -V --target-env spirv1.1 " + wrapper + " -o " + wrapper + ".spv")
     
         print("Disassembling to SPIR-V Assembly...")
@@ -72,17 +70,20 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
         patch_spirv_wrapper(wrapper + ".spvasm", "tachyon_main") # The function specification does not work yet
     
         print("Assembling patched SPIR-V Binary...")
-        run_command("spirv-as --target-env spv1.1 " + wrapper + ".spvasm -o " + wrapper + ".manual.spv")
+        run_command("spirv-as --target-env spv1.1 " + wrapper + ".spvasm -o " + wrapper + ".spv")
 
+    print("Assembling wrapper...")
+    run_command("spirv-as --target-env spv1.1 " + abs_tachyon_lib + "/tachyon/compiler/lib/wrapper.spvasm -o wrapper.spv")
 
     var abs_out_file = abs_output_dir + "/shader.spv"
-
+    
     print("Linking Core Shader with Runtime...")
-    run_command("spirv-link shader_logical.spv runtime.frag.manual.spv runtime.vert.manual.spv -o " + abs_out_file)
+    run_command("spirv-link --target-env spv1.1 shader_logical.spv runtime.frag.spv runtime.vert.spv wrapper.spv -o " + abs_out_file)
     
     print("Validating...")
     run_command("spirv-val --target-env spv1.1 " + abs_out_file)
     
+
     # Cleanup
     var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv"]
     for i in range(len(files_to_remove)):
@@ -105,22 +106,22 @@ def run_command(cmd: String) raises:
     # print("Run:", cmd)
     _ = run(cmd)
 
-def patch_llvm_ir(filepath: String) raises:
-    var f_in = file.open(filepath, "r")
+def patch_llvm_ir(path: Path) raises:
+    var f_in = file.open(path, "r")
     var content = String(f_in.read())
     f_in.close()
     
     content = content.replace("x86_64-unknown-linux-gnu", "spir64-unknown-unknown")
     
-    var f_out = file.open(filepath, "w")
+    var f_out = file.open(path, "w")
     f_out.write(content)
     f_out.close()
 
-def patch_spirv_asm(filepath: String) raises:
+def patch_spirv_asm(path: Path) raises:
     var re = Python.import_module("re")
     var json = Python.import_module("json")
     
-    var f_in = file.open(filepath, "r")
+    var f_in = file.open(path, "r")
     var content = String(f_in.read())
     f_in.close()
 
@@ -164,26 +165,26 @@ def patch_spirv_asm(filepath: String) raises:
     content = String(re.sub(r'^\s*OpLifetimeStart\s+%\d+\s+\d+\n', "", content, flags=re.MULTILINE))
     content = String(re.sub(r'^\s*OpLifetimeStop\s+%\d+\s+\d+\n', "", content, flags=re.MULTILINE))
 
-    var f_out = file.open(filepath, "w")
+    var f_out = file.open(path, "w")
     f_out.write(content)
     f_out.close()
 
-def patch_spirv_wrapper(filepath: String, function_name: String) raises:
+def patch_spirv_wrapper(path: String, function_name: String) raises:
     var re = Python.import_module("re")
     
-    var f_in = file.open(filepath, "r")
+    var f_in = file.open(path, "r")
     var content = f_in.read()
     f_in.close()
     
     # Add Import Decorator
-    var pattern1 = r'(OpName %' + function_name + r' "' + function_name + r'"\n)'
-    var repl1 = r'\1               OpDecorate %' + function_name + r' LinkageAttributes "' + function_name + r'" Import\n'
+    var pattern1 = r'(OpName %(' + function_name + r'[^\s]*) "' + function_name + r'(\(|").*?\n)'
+    var repl1 = r'\1               OpDecorate %\2 LinkageAttributes "' + function_name + r'_ptr" Import\n'
     content = String(re.sub(pattern1, repl1, content))
     
-    # Stringip body
-    var pattern2 = r'(%' + function_name + r' = OpFunction.*?\n(?:.*?OpFunctionParameter.*?\n)*?)(?:\s*%\d+\s*=\s*OpLabel.*?\n)(?:.*?\n)*?(?=\s*OpFunctionEnd)'
+    # Strip body
+    var pattern2 = r'(%(' + function_name + r'[^\s]*) = OpFunction.*?\n(?:.*?OpFunctionParameter.*?\n)*?)(?:\s*%\d+\s*=\s*OpLabel.*?\n)(?:.*?\n)*?(?=\s*OpFunctionEnd)'
     content = String(re.sub(pattern2, r'\1', content, flags=re.DOTALL))
     
-    var f_out = file.open(filepath, "w")
+    var f_out = file.open(path, "w")
     f_out.write(content)
     f_out.close()

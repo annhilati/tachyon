@@ -6,3 +6,6 @@
 
 # Pixi
 .pixi/
+
+# Dev
+test_*
