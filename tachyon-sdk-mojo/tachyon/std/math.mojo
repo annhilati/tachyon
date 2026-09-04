@@ -1,4 +1,4 @@
-from .lib.ffi import GLSL_std_450_op_call
+from .lib.ffi import GLSLstd450_op_call
 
 
 @always_inline

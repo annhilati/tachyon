@@ -2,7 +2,7 @@
 comptime Float = Float32
 comptime Int = Int32
 comptime UInt = UInt32
-comptime Bool = __type_of(True)
+comptime Bool = type_of(True)
 
 # Float Vektoren (vec2, vec3, vec4)
 comptime Vec2 = SIMD[DType.float32, 2]
@@ -27,18 +27,18 @@ comptime BVec4 = SIMD[DType.bool, 4]
 # Matrizen (mat2, mat3, mat4) 
 # In SPIR-V sind Matrizen oft Arrays/Structs aus Spalten-Vektoren (Column-Major).
 # Wir bilden sie als Structs ab, die sich genau wie GLSL-Matrizen verhalten.
-@value
+@fieldwise_init
 struct Mat2:
     var c0: Vec2
     var c1: Vec2
 
-@value
+@fieldwise_init
 struct Mat3:
     var c0: Vec3
     var c1: Vec3
     var c2: Vec3
 
-@value
+@fieldwise_init
 struct Mat4:
     var c0: Vec4
     var c1: Vec4

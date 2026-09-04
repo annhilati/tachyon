@@ -1,16 +1,15 @@
-from sys.ffi import external_call
+from std.ffi import external_call
 
 @always_inline
-def _FNV_1a(s: StringLiteral) -> UInt32:
+def _FNV_1a(s: String) -> UInt32:
     var hash: UInt32 = 2166136261
     var prime: UInt32 = 16777619
+
+    var bytes = s.as_bytes()
     
-    var s = StringRef(s)
-    var ptr = s.data()
-    
-    for i in range(len(s)):
-        hash ^= ptr[i].cast[DType.uint32]()
-        hash &*= prime
+    for i in range(len(bytes)):
+        hash ^= bytes[i].cast[DType.uint32]()
+        hash = hash * prime
     
     return hash
 
@@ -24,10 +23,10 @@ def Option[type: DType, name: StringLiteral](default: SIMD[type, 1]) -> SIMD[typ
     var id = _FNV_1a(name)
 
     comptime if type == DType.float32:
-        return external_call["_Z20__spirv_SpecConstantif", Float32](id, default)
+        return rebind[SIMD[type, 1]](external_call["_Z20__spirv_SpecConstantif", Float32](id, default))
     elif type == DType.int32:
-        return external_call["_Z20__spirv_SpecConstantii", Int32](id, default)
+        return rebind[SIMD[type, 1]](external_call["_Z20__spirv_SpecConstantii", Int32](id, default))
     elif type == DType.bool:
-        return external_call["_Z20__spirv_SpecConstantib", Bool](id, default)
+        return rebind[SIMD[type, 1]](external_call["_Z20__spirv_SpecConstantib", Bool](id, default))
     else:
-        raise
+        comptime assert False, "Unsupported Type"

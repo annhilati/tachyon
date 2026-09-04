@@ -1,18 +1,2 @@
 {
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/.DS_Store": true,
-        "**/Thumbs.db": true,
-        ".vscode": true,
-        "tachyon/.idea": true,
-        "test-shader/.pixi": true
-    },
-    "hide-files.files": [
-        ".vscode",
-        "tachyon/.idea",
-        "test-shader/.pixi"
-    ],
-    "java.configuration.updateBuildConfiguration": "automatic"
-}
+    " mojo.lsp.includeDirs\:

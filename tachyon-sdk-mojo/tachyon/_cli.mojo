@@ -1,8 +1,9 @@
-import sys
+from std import sys
+from std.pathlib import Path
 from argmojo import Argument, Command
-from .compiler import compile
+from tachyon.compiler import compile
 
-def main() raises:
+def cli() raises:
     var app = Command("tachyon", "Tachyon Mojo to SPIR-V Compiler.", version="0.1.0")
 
     app.add_argument(
@@ -27,9 +28,10 @@ def main() raises:
 
     var result = app.parse()
 
-    var shader_path = result.get_string("shader")
-    var output_dir = result.get_string("output")
+    var cli_path = Path(sys.argv()[0])
+
+    var shader_path = Path(result.get_string("shader"))
+    var output_dir = Path(result.get_string("output"))
     var do_zip = result.get_flag("zip")
     
-    var cli_path = sys.argv()[0]
     compile(cli_path, shader_path, output_dir, do_zip)
