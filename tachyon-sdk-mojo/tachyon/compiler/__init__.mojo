@@ -23,17 +23,16 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     var abs_output_dir = String(py_os.path.abspath(String(output_dir.__fspath__())))
     var abs_tachyon_lib = String(py_os.path.abspath(tachyon_lib))
     
-    var temp_dir = String()
     if debug:
-        temp_dir = String(py_os.path.join(py_os.path.dirname(abs_shader_file), ".tachyon-build"))
-        py_os.makedirs(temp_dir, exist_ok=True)
+        var temp_dir = String(py_os.path.join(py_os.path.dirname(abs_shader_file), ".tachyon-build"))
+        os.makedirs(temp_dir, exist_ok=True)
         print("Debug mode enabled. Compiling in: " + temp_dir)
-        py_os.chdir(temp_dir)
+        os.chdir(temp_dir)
     else:
         var mkdtemp = Python.import_module("tempfile").mkdtemp
-        temp_dir = String(mkdtemp())
+        var temp_dir = String(mkdtemp())
         print("Temp dir: " + temp_dir)
-        py_os.chdir(temp_dir)
+        os.chdir(temp_dir)
     
     
     print("=================================")
@@ -47,7 +46,7 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     patch_llvm_ir("shader.ll")
     
     print("Assembling LLVM IR to LLVM Bitcode...")
-    run_command("opt -O3 shader.ll -o shader.bc")
+    run_command("opt --no-warn -O3 shader.ll -o shader.bc")
     
     print("Translating LLVM Bitcode to SPIR-V Binary...")
     run_command("llvm-spirv shader.bc -o shader.spv")
@@ -85,8 +84,12 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
         print("Assembling patched SPIR-V Binary...")
         run_command("spirv-as --target-env spv1.1 " + wrapper + ".spvasm -o " + wrapper + ".spv")
 
-    print("Assembling wrapper...")
-    run_command("spirv-as --target-env spv1.1 " + abs_tachyon_lib + "/tachyon/compiler/lib/wrapper.spvasm -o wrapper.spv")
+    print("Compiling Transport Layer (wrapper.ll) to SPIR-V...")
+    run_command("opt --no-warn -O3 wrapper.ll -o wrapper.bc")
+    run_command("llvm-spirv wrapper.bc -o wrapper_raw.spv")
+    run_command("spirv-dis wrapper_raw.spv -o wrapper_raw.spvasm")
+    patch_spirv_asm("wrapper_raw.spvasm")
+    run_command("spirv-as --target-env spv1.1 wrapper_raw.spvasm -o wrapper.spv")
 
     var abs_out_file = abs_output_dir + "/shader.spv"
     
@@ -99,7 +102,7 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
 
     # Cleanup
     if not debug:
-        var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv"]
+        var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv", "wrapper.ll", "wrapper.bc", "wrapper_raw.spv", "wrapper_raw.spvasm", "wrapper.spv"]
         for i in range(len(files_to_remove)):
             try:
                 os.remove(files_to_remove[i])
@@ -183,6 +186,7 @@ def patch_spirv_asm(path: Path) raises:
         content = String(re.sub(r'^\s*OpDecorate\s+' + func_id + r'.*\n', "", content, flags=re.MULTILINE))
             
     content = String(re.sub(r'^\s*OpDecorate\s+%\d+\s+Alignment\s+\d+\n', "", content, flags=re.MULTILINE))
+    content = String(re.sub(r'^\s*OpDecorate\s+%\w+\s+FuncParamAttr.*\n', "", content, flags=re.MULTILINE))
     content = String(re.sub(r'^\s*OpLifetimeStart\s+%\d+\s+\d+\n', "", content, flags=re.MULTILINE))
     content = String(re.sub(r'^\s*OpLifetimeStop\s+%\d+\s+\d+\n', "", content, flags=re.MULTILINE))
 

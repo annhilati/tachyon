@@ -1,7 +1,12 @@
 # Generated files
 *.spv
+*.spvasm
 *.bc
 *.ll
+
+# Wrappers
+!tachyon/compiler/lib/*.ll
+!tachyon/compiler/lib/*.spvasm
 
 # Pixi
 .pixi/

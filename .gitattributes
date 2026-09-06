@@ -3,4 +3,4 @@
 
 **/assets/**/*.json linguist-detectable=true
 
-.reference/ linguist-detectable=false
+.reference/** linguist-detectable=false
