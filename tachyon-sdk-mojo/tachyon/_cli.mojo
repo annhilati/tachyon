@@ -26,6 +26,13 @@ def cli() raises:
         .flag()
     )
 
+    app.add_argument(
+        Argument("debug", help="Enable debug mode (compiles in current directory, preserves temp files)")
+        .long["debug"]()
+        .short["d"]()
+        .flag()
+    )
+
     var result = app.parse()
 
     var cli_path = Path(sys.argv()[0])
@@ -33,5 +40,6 @@ def cli() raises:
     var shader_path = Path(result.get_string("shader"))
     var output_dir = Path(result.get_string("output"))
     var do_zip = result.get_flag("zip")
+    var do_debug = result.get_flag("debug")
     
-    compile(cli_path, shader_path, output_dir, do_zip)
+    compile(cli_path, shader_path, output_dir, do_zip, do_debug)

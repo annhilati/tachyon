@@ -9,7 +9,7 @@ import std.os as os
 
 
 
-def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = False) raises:
+def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = False, debug: Bool = False) raises:
     var tachyon_lib = String(Python.import_module("os").path.dirname(String(cli_path.__fspath__())))
     
     var cwd = Path()
@@ -23,9 +23,17 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     var abs_output_dir = String(py_os.path.abspath(String(output_dir.__fspath__())))
     var abs_tachyon_lib = String(py_os.path.abspath(tachyon_lib))
     
-    var temp_dir = mkdtemp()
-    print("Temp dir: " + String(temp_dir.__fspath__()))
-    py_os.chdir(temp_dir)
+    var temp_dir = String()
+    if debug:
+        temp_dir = String(py_os.path.join(py_os.path.dirname(abs_shader_file), ".tachyon-build"))
+        py_os.makedirs(temp_dir, exist_ok=True)
+        print("Debug mode enabled. Compiling in: " + temp_dir)
+        py_os.chdir(temp_dir)
+    else:
+        var mkdtemp = Python.import_module("tempfile").mkdtemp
+        temp_dir = String(mkdtemp())
+        print("Temp dir: " + temp_dir)
+        py_os.chdir(temp_dir)
     
     
     print("=================================")
@@ -55,9 +63,14 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     
     var py_shutil = Python.import_module("shutil")
     var compiler_lib_dir = abs_tachyon_lib + "/tachyon/compiler/lib"
-    _ = py_shutil.copyfile(compiler_lib_dir + "/runtime.frag", "runtime.frag")
-    _ = py_shutil.copyfile(compiler_lib_dir + "/runtime.vert", "runtime.vert")
-    _ = py_shutil.copyfile(compiler_lib_dir + "/runtime.glsl", "runtime.glsl")
+    
+    # Copy all files from lib to the current working directory
+    var py_os2 = Python.import_module("os")
+    var lib_files = py_os2.listdir(compiler_lib_dir)
+    for i in range(len(lib_files)):
+        var file_name = String(lib_files[i])
+        if py_os2.path.isfile(compiler_lib_dir + "/" + file_name):
+            _ = py_shutil.copyfile(compiler_lib_dir + "/" + file_name, file_name)
 
     for wrapper in ["runtime.frag", "runtime.vert"]:
         print("Compiling Runtime: " + wrapper + "...")
@@ -85,12 +98,20 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     
 
     # Cleanup
-    var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv"]
-    for i in range(len(files_to_remove)):
-        try:
-            os.remove(files_to_remove[i])
-        except:
-            pass
+    if not debug:
+        var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv"]
+        for i in range(len(files_to_remove)):
+            try:
+                os.remove(files_to_remove[i])
+            except:
+                pass
+        
+        # Cleanup all copied lib files
+        for i in range(len(lib_files)):
+            try:
+                os.remove(String(lib_files[i]))
+            except:
+                pass
             
     if zip:
         var shutil = Python.import_module("shutil")

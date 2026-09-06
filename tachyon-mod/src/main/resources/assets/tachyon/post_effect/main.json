@@ -14,7 +14,7 @@
             ],
             "output": "swap",
             "uniforms": {
-                "TachyonConfig": [
+                "TachyonGlobals": [
                     {
                         "name": "Time",
                         "type": "float",

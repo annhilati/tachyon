@@ -9,3 +9,4 @@
 
 # Dev
 test_*
+.tachyon-build/

@@ -11,7 +11,8 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
 
-#include "runtime.glsl"
+#include "globals.glsl"
+#include "samplers.glsl"
 
 layout(location = 0) in vec2 texCoord;              // provided by runtime.vert
 layout(location = 0) out vec4 fragColor;            // used by Minecraft

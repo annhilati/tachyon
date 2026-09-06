@@ -2,3 +2,5 @@
 *.ll linguist-language=LLVM
 
 **/assets/**/*.json linguist-detectable=true
+
+.reference/ linguist-detectable=false

@@ -2,7 +2,7 @@
 
 uniform sampler2D InSampler;
 
-layout(std140) uniform TachyonConfig {
+layout(std140) uniform TachyonGlobals {
     float Time;
 };
 

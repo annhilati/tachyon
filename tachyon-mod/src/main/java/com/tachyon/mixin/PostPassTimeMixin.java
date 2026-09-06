@@ -23,8 +23,8 @@ public abstract class PostPassTimeMixin {
 
     @Inject(method = "addToFrame", at = @At("HEAD"))
     private void onAddToFrame(FrameGraphBuilder builder, Map<?, ?> inputs, GpuBufferSlice output, CallbackInfo ci) {
-        if (this.customUniforms != null && this.customUniforms.containsKey("TachyonConfig")) {
-            GpuBuffer uboBuffer = this.customUniforms.get("TachyonConfig");
+        if (this.customUniforms != null && this.customUniforms.containsKey("TachyonGlobals")) {
+            GpuBuffer uboBuffer = this.customUniforms.get("TachyonGlobals");
             if (uboBuffer != null && !uboBuffer.isClosed()) {
                 try {
                     if (!replacedBuffer) {

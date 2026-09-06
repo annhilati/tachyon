@@ -1,6 +1,3 @@
-.reference/
+.reference/**_src
 
-!.reference/@docs/
-/tachyon-mod/.idea
-/tachyon-mod/.idea
 .vscode/

@@ -11,11 +11,9 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
 
-layout(location = 0) out vec2 texCoord; // used by runtime.frag
+#include "globals.glsl"
 
-layout(binding = 0, std140) uniform TachyonConfig { // provided by post_effect tachyon:main
-    float Time;
-};
+layout(location = 0) out vec2 texCoord; // used by runtime.frag
 
 vec4 tachyon_vert_main(vec4 pos, vec2 uv, float time) { return pos; }
 
