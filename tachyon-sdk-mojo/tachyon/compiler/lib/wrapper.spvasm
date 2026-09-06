@@ -1,0 +1,28 @@
+               OpCapability Shader
+               OpMemoryModel Logical GLSL450
+               OpDecorate %glsl_main LinkageAttributes "tachyon_main_ptr" Export
+               OpDecorate %mojo_main LinkageAttributes "tachyon_main" Import
+
+       %void = OpTypeVoid
+      %float = OpTypeFloat 32
+    %v4float = OpTypeVector %float 4
+%_ptr_Function_float = OpTypePointer Function %float
+%_ptr_Function_v4float = OpTypePointer Function %v4float
+
+   %fn_mojo = OpTypeFunction %v4float %v4float %float
+   %fn_glsl = OpTypeFunction %v4float %_ptr_Function_v4float %_ptr_Function_float
+
+  %mojo_main = OpFunction %v4float None %fn_mojo
+     %color_v = OpFunctionParameter %v4float
+      %time_v = OpFunctionParameter %float
+               OpFunctionEnd
+
+  %glsl_main = OpFunction %v4float None %fn_glsl
+      %color = OpFunctionParameter %_ptr_Function_v4float
+       %time = OpFunctionParameter %_ptr_Function_float
+      %entry = OpLabel
+         %cv = OpLoad %v4float %color
+         %tv = OpLoad %float %time
+        %res = OpFunctionCall %v4float %mojo_main %cv %tv
+               OpReturnValue %res
+               OpFunctionEnd

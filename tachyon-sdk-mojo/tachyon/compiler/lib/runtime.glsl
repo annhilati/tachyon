@@ -11,6 +11,6 @@
 //=====// Bindings for external resources //======================================//
 
 layout(binding = 0) uniform sampler2D InSampler;    // provided by post_effect tachyon:main as In
-layout(binding = 1, std140) uniform TachyonConfig { // provided by post_effect tachyon:main
+layout(binding = 0, std140) uniform TachyonConfig { // provided by post_effect tachyon:main
     float Time;
-} TachyonConfig_inst;
+};

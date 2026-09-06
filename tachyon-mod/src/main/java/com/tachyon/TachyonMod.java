@@ -69,7 +69,10 @@ public class TachyonMod implements ClientModInitializer {
             if (Files.exists(devFolder) && Files.isDirectory(devFolder)) {
                 Path spvPath = devFolder.resolve("shader.spv");
                 if (Files.exists(spvPath)) {
-                    return Files.readAllBytes(spvPath);
+                    LOGGER.info("[Tachyon Debug] Lade SPIR-V von Pfad: " + spvPath.toAbsolutePath().toString());
+                    byte[] bytes = Files.readAllBytes(spvPath);
+                    LOGGER.info("[Tachyon Debug] Gelesen: " + bytes.length + " bytes.");
+                    return bytes;
                 }
             }
 
@@ -86,7 +89,10 @@ public class TachyonMod implements ClientModInitializer {
                             while ((nRead = is.read(data, 0, data.length)) != -1) {
                                 buffer.write(data, 0, nRead);
                             }
-                            return buffer.toByteArray();
+                            LOGGER.info("[Tachyon Debug] Lade SPIR-V aus ZIP: " + zipPath.toAbsolutePath().toString());
+                            byte[] bytes = buffer.toByteArray();
+                            LOGGER.info("[Tachyon Debug] Gelesen: " + bytes.length + " bytes.");
+                            return bytes;
                         }
                     }
                 }

@@ -9,15 +9,17 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.Map;
+import java.lang.reflect.Field;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL31;
-import java.lang.reflect.Method;
-import java.util.Map;
 
 @Mixin(PostPass.class)
 public abstract class PostPassTimeMixin {
 
     @Shadow @org.spongepowered.asm.mixin.Final private Map<String, GpuBuffer> customUniforms;
+    
+    private boolean replacedBuffer = false;
 
     @Inject(method = "addToFrame", at = @At("HEAD"))
     private void onAddToFrame(FrameGraphBuilder builder, Map<?, ?> inputs, GpuBufferSlice output, CallbackInfo ci) {
@@ -25,27 +27,33 @@ public abstract class PostPassTimeMixin {
             GpuBuffer uboBuffer = this.customUniforms.get("TachyonConfig");
             if (uboBuffer != null && !uboBuffer.isClosed()) {
                 try {
-                    Method handleMethod = uboBuffer.getClass().getMethod("handle");
-                    handleMethod.setAccessible(true);
-                    int handle = (int) handleMethod.invoke(uboBuffer);
-                    
-                    if (handle > 0) {
-                        float timeInSeconds = (System.currentTimeMillis() % 10000) / 1000.0f; // 0.0 to 10.0
-                        float pulse = (float) (0.5 + 0.5 * Math.sin(timeInSeconds * 3.0));
+                    if (!replacedBuffer) {
+                        replacedBuffer = true;
                         
-                        GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, handle);
+                        Class<?> glBufferClass = Class.forName("com.mojang.blaze3d.opengl.GlBuffer");
+                        Field handleField = glBufferClass.getDeclaredField("handle");
+                        handleField.setAccessible(true);
+                        int oldHandle = handleField.getInt(uboBuffer);
                         
-                        // Check buffer size to prevent GL_INVALID_VALUE
-                        int size = GL15.glGetBufferParameteri(GL31.GL_UNIFORM_BUFFER, GL15.GL_BUFFER_SIZE);
-                        if (size >= 4) {
-                            GL15.glBufferSubData(GL31.GL_UNIFORM_BUFFER, 0, new float[]{pulse});
-                        } else {
-                            System.out.println("[Tachyon] WARNING: TachyonConfig UBO size is " + size + ". Expected 4!");
-                        }
+                        GL15.glDeleteBuffers(oldHandle);
+                        com.tachyon.TachyonState.TachyonUboHandle = GL15.glGenBuffers();
+                        GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, com.tachyon.TachyonState.TachyonUboHandle);
+                        GL15.glBufferData(GL31.GL_UNIFORM_BUFFER, 16, GL15.GL_DYNAMIC_DRAW);
+                        GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
+                        
+                        handleField.setInt(uboBuffer, com.tachyon.TachyonState.TachyonUboHandle);
+                    }
+
+                    if (com.tachyon.TachyonState.TachyonUboHandle > 0) {
+                        float timeInSeconds = (System.currentTimeMillis() % 10000) / 1000.0f; 
+                        
+                        GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, com.tachyon.TachyonState.TachyonUboHandle);
+                        GL15.glBufferSubData(GL31.GL_UNIFORM_BUFFER, 0, new float[]{timeInSeconds, 0, 0, 0});
                         GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
                     }
                 } catch (Exception e) {
-                    // Ignore
+                    System.out.println("[Tachyon] Exception in PostPassTimeMixin:");
+                    e.printStackTrace();
                 }
             }
         }

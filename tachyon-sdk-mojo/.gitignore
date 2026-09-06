@@ -1,6 +1,5 @@
 # Generated files
 *.spv
-*.spvasm
 *.bc
 *.ll
 

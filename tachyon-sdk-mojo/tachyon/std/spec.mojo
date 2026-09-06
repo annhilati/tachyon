@@ -15,7 +15,7 @@ def _FNV_1a(s: String) -> UInt32:
 
 
 @always_inline
-def Option[type: DType, name: StringLiteral](default: SIMD[type, 1]) -> SIMD[type, 1]:
+def Option[name: StringLiteral, type: DType](default: SIMD[type, 1]) -> SIMD[type, 1]:
     """Registers an variable open to the shader settings.
     
     The variables used here are SPIR-V specialization constants.

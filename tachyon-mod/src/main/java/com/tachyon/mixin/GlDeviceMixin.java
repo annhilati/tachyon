@@ -51,24 +51,48 @@ public class GlDeviceMixin {
                     return;
                 }
 
+                TachyonMod.LOGGER.info("[Tachyon Debug] OpenGL Loading: ID=" + shaderId + ", Type=" + type.name());
+
                 // 2. SPIR-V Binärdaten in die GPU laden
                 org.lwjgl.opengl.GL41.glShaderBinary(new int[]{shaderId}, org.lwjgl.opengl.ARBGLSPIRV.GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, spvBuffer);
+                TachyonMod.LOGGER.info("[Tachyon Debug] glShaderBinary aufgerufen.");
 
                 // 3. Einstiegspunkt spezifizieren (leere Arrays statt null, sonst crasht LWJGL beim .length Check!)
                 org.lwjgl.opengl.ARBGLSPIRV.glSpecializeShaderARB(shaderId, "main", new int[0], new int[0]);
+                TachyonMod.LOGGER.info("[Tachyon Debug] glSpecializeShaderARB aufgerufen.");
 
                 // 4. Speicher aufräumen
                 MemoryUtil.memFree(spvBuffer);
 
                 // 5. Überprüfen
                 int compileStatus = GL20.glGetShaderi(shaderId, GL20.GL_COMPILE_STATUS);
+                String infoLog = GL20.glGetShaderInfoLog(shaderId);
+                if (infoLog != null && !infoLog.trim().isEmpty()) {
+                    TachyonMod.LOGGER.warn("[Tachyon Debug] Shader Info Log: " + infoLog);
+                }
+
                 if (compileStatus == GL20.GL_FALSE) {
-                    String infoLog = GL20.glGetShaderInfoLog(shaderId);
-                    TachyonMod.LOGGER.error("Fehler beim Spezialisieren des SPIR-V Shaders: " + infoLog);
+                    TachyonMod.LOGGER.error("[Tachyon Debug] Fehler beim Spezialisieren des SPIR-V Shaders! Abbruch.");
                     return;
                 }
 
-                TachyonMod.LOGGER.info("SPIR-V Shader " + name + " erfolgreich geladen! (ID: " + shaderId + ")");
+                TachyonMod.LOGGER.info("[Tachyon Debug] SPIR-V Shader " + name + " erfolgreich geladen! (ID: " + shaderId + ")");
+
+                // Parse and print Entry Points
+                try {
+                    java.util.List<String> entryPoints = com.tachyon.SpirVParser.getEntryPoints(spvBytes);
+                    String entryStr = String.join(", ", entryPoints);
+                    TachyonMod.LOGGER.info("[Tachyon Debug] SPIR-V Entry Points: " + entryStr);
+                    
+                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                    if (mc != null && mc.player != null) {
+                        mc.player.sendSystemMessage(
+                            net.minecraft.network.chat.Component.literal("§b[Tachyon] §fGeladen: " + name + " -> §e" + entryStr)
+                        );
+                    }
+                } catch (Throwable t) {
+                    TachyonMod.LOGGER.error("Konnte Entry Points nicht an Chat senden", t);
+                }
 
                 // 6. GlShaderModule erstellen (ID, type)
                 GlShaderModule module = new GlShaderModule(shaderId, id, type);

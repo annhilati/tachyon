@@ -13,7 +13,9 @@
 
 layout(location = 0) out vec2 texCoord; // used by runtime.frag
 
-#include "runtime.glsl"
+layout(binding = 0, std140) uniform TachyonConfig { // provided by post_effect tachyon:main
+    float Time;
+};
 
 vec4 tachyon_vert_main(vec4 pos, vec2 uv, float time) { return pos; }
 
@@ -23,6 +25,6 @@ void main() {
     vec4 pos = vec4(uv * vec2(2, 2) + vec2(-1, -1), 0, 1);
     
     // Call Mojo to optionally modify the vertex position
-    gl_Position = tachyon_vert_main(pos, uv, TachyonConfig_inst.Time);
+    gl_Position = tachyon_vert_main(pos, uv, Time);
     texCoord = uv;
 }

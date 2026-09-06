@@ -23,5 +23,7 @@ vec4 tachyon_main(vec4 color, float time) {
 
 void main() {
     vec4 color = texture(InSampler, texCoord);
-    fragColor = tachyon_main(color, TachyonConfig_inst.Time);
+    
+    // Call Mojo to compute the final color
+    fragColor = tachyon_main(color, Time);
 }
