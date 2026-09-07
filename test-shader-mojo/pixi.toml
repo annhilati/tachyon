@@ -7,8 +7,7 @@ channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 platforms = ["linux-64", "osx-arm64"]
 
 [dependencies]
-mojo = "*"
-python = ">=3.14.7,<3.15"
+# No dependencies because we use the environment of the Mojo SDK for tasks
 
 [tasks]
 build = "cd ../tachyon-sdk-mojo && ~/.pixi/bin/pixi run mojo run cli.mojo ../test-shader-mojo/shader.mojo -o ../tachyon-mod/run/shaderpacks/shader"
