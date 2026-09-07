@@ -9,8 +9,8 @@ flowchart TD
     end
 
     subgraph Transport ["LLVM Transport Layer"]
-        T1[wrapper.ll] -->|opt -O3| T2(wrapper.bc)
-        T2 -->|llvm-spirv| T3(wrapper_raw.spv)
+        T1[p2v_adapter.ll] -->|opt -O3| T2(p2v_adapter.bc)
+        T2 -->|llvm-spirv| T3(p2v_adapter_raw.spv)
     end
 
     subgraph GLSL ["GLSL Compilation"]
@@ -20,13 +20,13 @@ flowchart TD
     subgraph Patching ["Compatability Patching"]
         M4 -->|spirv-dis| P1(shader.spvasm)
         R2 -->|spirv-dis| R3(runtime.vert.spvasm<br>runtime.frag.spvasm)
-        T3 -->|spirv-dis| P2(wrapper_raw.spvasm)
+        T3 -->|spirv-dis| P2(p2v_adapter_raw.spvasm)
     end
     
     subgraph Linking ["SPIR-V Linking (spirv-link)"]
         P1 -->|spirv-as| L1(shader_logical.spv)
         R3 -->|spirv-as| L2(runtime.vert.manual.spv<br>runtime.frag.manual.spv)
-        P2 -->|spirv-as| L3(wrapper.spv)
+        P2 -->|spirv-as| L3(p2v_adapter.spv)
         L1 --> LF(Final shader.spv)
         L2 --> LF
         L3 --> LF
