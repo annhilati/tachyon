@@ -3,7 +3,7 @@ name = "tachyon-sdk"
 version = "0.1.0"
 description = "Tachyon Mojo SDK"
 authors = ["Annhilati"]
-channels = ["https://conda.modular.com/max-nightly", "conda-forge", "https://repo.prefix.dev/modular-community"]
+channels = ["https://repo.prefix.dev/modular-community", "https://conda.modular.com/max-nightly", "conda-forge"]
 platforms = ["linux-64", "osx-arm64"]
 
 [dependencies]

@@ -65,9 +65,8 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
     
     # Copy all files from lib to the current working directory
     var py_os2 = Python.import_module("os")
-    var lib_files = py_os2.listdir(compiler_lib_dir)
-    for i in range(len(lib_files)):
-        var file_name = String(lib_files[i])
+    var lib_files = os.listdir(compiler_lib_dir)
+    for file_name in lib_files:
         if py_os2.path.isfile(compiler_lib_dir + "/" + file_name):
             _ = py_shutil.copyfile(compiler_lib_dir + "/" + file_name, file_name)
 
@@ -79,22 +78,22 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
         run_command("spirv-dis " + wrapper + ".spv -o " + wrapper + ".spvasm")
     
         print("Patching compatability with OpenGL...")
-        patch_spirv_wrapper(wrapper + ".spvasm", "tachyon_main") # The function specification does not work yet
+        pach_wrapper_spirv_asm(wrapper + ".spvasm", "tachyon_main")
     
         print("Assembling patched SPIR-V Binary...")
         run_command("spirv-as --target-env spv1.1 " + wrapper + ".spvasm -o " + wrapper + ".spv")
 
-    print("Compiling Transport Layer (wrapper.ll) to SPIR-V...")
-    run_command("opt --no-warn -O3 wrapper.ll -o wrapper.bc")
-    run_command("llvm-spirv wrapper.bc -o wrapper_raw.spv")
-    run_command("spirv-dis wrapper_raw.spv -o wrapper_raw.spvasm")
-    patch_spirv_asm("wrapper_raw.spvasm")
-    run_command("spirv-as --target-env spv1.1 wrapper_raw.spvasm -o wrapper.spv")
+    print("Compiling Transport Layer (p2v_adapter.ll) to SPIR-V...")
+    run_command("opt --no-warn -O3 p2v_adapter.ll -o p2v_adapter.bc")
+    run_command("llvm-spirv p2v_adapter.bc -o p2v_adapter_raw.spv")
+    run_command("spirv-dis p2v_adapter_raw.spv -o p2v_adapter_raw.spvasm")
+    patch_spirv_asm("p2v_adapter_raw.spvasm")
+    run_command("spirv-as --target-env spv1.1 p2v_adapter_raw.spvasm -o p2v_adapter.spv")
 
     var abs_out_file = abs_output_dir + "/shader.spv"
     
     print("Linking Core Shader with Runtime...")
-    run_command("spirv-link --target-env spv1.1 shader_logical.spv runtime.frag.spv runtime.vert.spv wrapper.spv -o " + abs_out_file)
+    run_command("spirv-link --target-env spv1.1 shader_logical.spv runtime.frag.spv runtime.vert.spv p2v_adapter.spv -o " + abs_out_file)
     
     print("Validating...")
     run_command("spirv-val --target-env spv1.1 " + abs_out_file)
@@ -102,7 +101,7 @@ def compile(cli_path: Path, shader_file: Path, output_dir: Path, zip: Bool = Fal
 
     # Cleanup
     if not debug:
-        var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv", "wrapper.ll", "wrapper.bc", "wrapper_raw.spv", "wrapper_raw.spvasm", "wrapper.spv"]
+        var files_to_remove = ["shader.ll", "shader.bc", "shader.spv", "shader.spvasm", "shader_logical.spv", "runtime.frag.spv", "runtime.frag.spvasm", "runtime.frag.manual.spv", "runtime.vert.spv", "runtime.vert.spvasm", "runtime.vert.manual.spv", "p2v_adapter.ll", "p2v_adapter.bc", "p2v_adapter_raw.spv", "p2v_adapter_raw.spvasm", "p2v_adapter.spv"]
         for i in range(len(files_to_remove)):
             try:
                 os.remove(files_to_remove[i])
@@ -194,7 +193,7 @@ def patch_spirv_asm(path: Path) raises:
     f_out.write(content)
     f_out.close()
 
-def patch_spirv_wrapper(path: String, function_name: String) raises:
+def pach_wrapper_spirv_asm(path: String, function_name: String) raises:
     var re = Python.import_module("re")
     
     var f_in = file.open(path, "r")
